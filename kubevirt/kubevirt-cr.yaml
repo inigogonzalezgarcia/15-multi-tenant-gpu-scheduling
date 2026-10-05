@@ -1,0 +1,11 @@
+# KubeVirt with software emulation allowed: QEMU (TCG) runs the guest when /dev/kvm is missing.
+# KubeVirt still prefers KVM when a node has it; scripts/kubevirt.sh reports which one it got.
+apiVersion: kubevirt.io/v1
+kind: KubeVirt
+metadata:
+  name: kubevirt
+  namespace: kubevirt
+spec:
+  configuration:
+    developerConfiguration:
+      useEmulation: true

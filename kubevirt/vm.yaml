@@ -1,0 +1,29 @@
+# A tiny CirrOS VM owned by a team. Its virt-launcher pod is an ordinary pod in the team namespace,
+# so the namespace's ResourceQuota counts it like any other workload.
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: NAME
+  namespace: team-research
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: NAME
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 128Mi
+        devices:
+          disks:
+          - name: root
+            disk:
+              bus: virtio
+      volumes:
+      - name: root
+        containerDisk:
+          image: quay.io/kubevirt/cirros-container-disk-demo:VERSION
