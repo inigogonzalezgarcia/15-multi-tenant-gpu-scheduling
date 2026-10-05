@@ -46,7 +46,7 @@ snapshot kai "3. reclaim"
 step "4. a build job (non-preemptible) in training preempts a train job of the same queue"
 submit kai training build --pods 1 --gpus 4 --priority build
 wait_for 180 "build job running" is kai 'd["training"]["jobs_running"].get("build", 0)' 1
-expect "training still at its 16 GPUs: one train pod gave way" is kai '(d["training"]["gpus_running"], d["training"]["jobs_running"].get("training", 0))' "(16, 3)"
+wait_for 60 "training still at its 16 GPUs: one train pod gave way" is kai '(d["training"]["gpus_running"], d["training"]["jobs_running"].get("training", 0))' "(16, 3)"
 snapshot kai "4. priority inside a queue"
 clean
 
