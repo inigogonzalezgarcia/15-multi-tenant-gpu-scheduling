@@ -21,6 +21,15 @@ class Kueue(unittest.TestCase):
         self.assertEqual(t["inference"].admitted, ["inference-1"])
         self.assertIn("InCohortReclamation=2", status.table_kueue(t))
 
+    def test_cause_gone_after_readmission(self):
+        # admitted again: Kueue sets Preempted=False (reason QuotaReserved); the count stays, the cause does not
+        wl = {"metadata": {"name": "w", "ownerReferences": [{"name": "research-1"}]}, "spec": {"queueName": "research"},
+              "status": {"conditions": [{"type": "Admitted", "status": "True"},
+                                        {"type": "Preempted", "status": "False", "reason": "QuotaReserved"}],
+                         "schedulingStats": {"evictions": [{"reason": "Preempted", "underlyingCause": "", "count": 1}]}}}
+        t = status.kueue({"items": []}, {"items": [wl]})
+        self.assertEqual(t["research"].preemptions, {"Preempted": 1})
+
 
 class Kai(unittest.TestCase):
     def test_teams(self):
