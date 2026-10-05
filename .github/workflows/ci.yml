@@ -1,0 +1,81 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests (standard library only)
+        run: python -m unittest -v
+      - name: Manifests match tenancy.toml
+        run: python -m tenancy render --check
+      - name: Shell scripts
+        run: shellcheck -x -P SCRIPTDIR scripts/*.sh
+
+  scheduler:
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [kueue, kai]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kind
+        run: |
+          source cluster/versions.env
+          curl -fsSLo /tmp/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64"
+          sudo install -m 0755 /tmp/kind /usr/local/bin/kind
+          kind version; kubectl version --client; helm version --short
+      - name: Cluster with 32 simulated GPUs
+        run: bash scripts/up.sh
+      - name: ${{ matrix.scenario }} scenarios
+        run: bash scripts/${{ matrix.scenario }}.sh
+      - name: Report
+        if: always()
+        run: cat out/${{ matrix.scenario }}-report.md 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
+      - name: Diagnostics
+        if: failure()
+        run: bash scripts/diagnose.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.scenario }}-run
+          path: out/
+          retention-days: 30
+
+  kubevirt:
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kind
+        run: |
+          source cluster/versions.env
+          curl -fsSLo /tmp/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64"
+          sudo install -m 0755 /tmp/kind /usr/local/bin/kind
+      - name: KubeVirt with software emulation
+        run: bash scripts/kubevirt.sh
+      - name: Report
+        if: always()
+        run: cat out/kubevirt-report.md 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
+      - name: Diagnostics
+        if: failure()
+        run: bash scripts/diagnose.sh
