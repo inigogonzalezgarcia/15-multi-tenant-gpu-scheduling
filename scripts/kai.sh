@@ -43,17 +43,18 @@ expect "research back to its quota: 8 GPUs" is kai 'd["research"]["gpus_running"
 expect "inference untouched" is kai 'd["inference"]["gpus_running"]' 8
 snapshot kai "3. reclaim"
 
+# gpus_running is a string (fractions: "1/2"), so tuples compare it as int
 step "4. a build job (non-preemptible) in training preempts a train job of the same queue"
 submit kai training build --pods 1 --gpus 4 --priority build
 wait_for 180 "build job running" is kai 'd["training"]["jobs_running"].get("build", 0)' 1
-wait_for 60 "training still at its 16 GPUs: one train pod gave way" is kai '(d["training"]["gpus_running"], d["training"]["jobs_running"].get("training", 0))' "(16, 3)"
+wait_for 60 "training still at its 16 GPUs: one train pod gave way" is kai '(int(d["training"]["gpus_running"]), d["training"]["jobs_running"].get("training", 0))' "(16, 3)"
 snapshot kai "4. priority inside a queue"
 clean
 
 step "5. gang scheduling: all pods of a job start together, or none does"
 submit kai inference serving --pods 2 --gpus 4 --priority inference       # 8 GPUs, not preemptible
 submit kai research blocker --pods 1 --gpus 8 --priority build            # 8 GPUs, in quota, not preemptible
-wait_for 120 "16 GPUs held by work that cannot be preempted" is kai '(d["inference"]["gpus_running"], d["research"]["gpus_running"])' "(8, 8)"
+wait_for 120 "16 GPUs held by work that cannot be preempted" is kai '(int(d["inference"]["gpus_running"]), int(d["research"]["gpus_running"]))' "(8, 8)"
 submit kai training gang --pods 3 --gpus 8 --min-member 3 --priority train
 sleep 20
 expect "gang of 3 x 8 GPUs, 16 free: none of its pods starts" is kai '(d["training"]["jobs_running"].get("gang", 0), d["training"]["jobs_pending"].get("gang", 0))' "(0, 3)"
