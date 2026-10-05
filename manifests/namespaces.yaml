@@ -1,0 +1,21 @@
+# Generated from tenancy.toml by `python -m tenancy render`. Do not edit by hand.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-training
+  labels:
+    tenancy.lab/team: training
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-research
+  labels:
+    tenancy.lab/team: research
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-inference
+  labels:
+    tenancy.lab/team: inference

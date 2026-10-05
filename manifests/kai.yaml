@@ -1,0 +1,89 @@
+# Generated from tenancy.toml by `python -m tenancy render`. Do not edit by hand.
+apiVersion: scheduling.run.ai/v2
+kind: Queue
+metadata:
+  name: lab
+spec:
+  displayName: "lab cluster"
+  resources:
+    cpu:
+      quota: -1
+      limit: -1
+      overQuotaWeight: 1
+    memory:
+      quota: -1
+      limit: -1
+      overQuotaWeight: 1
+    gpu:
+      quota: 32
+      limit: 32
+      overQuotaWeight: 1
+---
+apiVersion: scheduling.run.ai/v2
+kind: Queue
+metadata:
+  name: training
+  labels:
+    tenancy.lab/team: training
+spec:
+  displayName: "Large training runs"
+  parentQueue: lab
+  resources:
+    cpu:
+      quota: -1
+      limit: -1
+      overQuotaWeight: 1
+    memory:
+      quota: -1
+      limit: -1
+      overQuotaWeight: 1
+    gpu:
+      quota: 16
+      limit: 24
+      overQuotaWeight: 2
+---
+apiVersion: scheduling.run.ai/v2
+kind: Queue
+metadata:
+  name: research
+  labels:
+    tenancy.lab/team: research
+spec:
+  displayName: "Experiments and hyper-parameter sweeps"
+  parentQueue: lab
+  resources:
+    cpu:
+      quota: -1
+      limit: -1
+      overQuotaWeight: 1
+    memory:
+      quota: -1
+      limit: -1
+      overQuotaWeight: 1
+    gpu:
+      quota: 8
+      limit: 16
+      overQuotaWeight: 1
+---
+apiVersion: scheduling.run.ai/v2
+kind: Queue
+metadata:
+  name: inference
+  labels:
+    tenancy.lab/team: inference
+spec:
+  displayName: "Model serving: its GPUs are never lent out"
+  parentQueue: lab
+  resources:
+    cpu:
+      quota: -1
+      limit: -1
+      overQuotaWeight: 1
+    memory:
+      quota: -1
+      limit: -1
+      overQuotaWeight: 1
+    gpu:
+      quota: 8
+      limit: 8
+      overQuotaWeight: 1

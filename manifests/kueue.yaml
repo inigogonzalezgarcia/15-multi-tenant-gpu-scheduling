@@ -1,0 +1,146 @@
+# Generated from tenancy.toml by `python -m tenancy render`. Do not edit by hand.
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ResourceFlavor
+metadata:
+  name: lab-gpu
+spec:
+  nodeLabels:
+    run.ai/simulated-gpu-node-pool: default
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: WorkloadPriorityClass
+metadata:
+  name: batch
+value: 100
+description: "Default for training and research jobs"
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: WorkloadPriorityClass
+metadata:
+  name: urgent
+value: 1000
+description: "A release blocker: may preempt batch jobs of the same team"
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: training
+  labels:
+    tenancy.lab/team: training
+spec:
+  cohortName: org
+  namespaceSelector:
+    matchLabels:
+      tenancy.lab/team: training
+  queueingStrategy: BestEffortFIFO
+  preemption:
+    reclaimWithinCohort: Any
+    withinClusterQueue: LowerPriority
+  resourceGroups:
+  - coveredResources:
+    - cpu
+    - memory
+    - nvidia.com/gpu
+    flavors:
+    - name: lab-gpu
+      resources:
+      - name: cpu
+        nominalQuota: "64"
+      - name: memory
+        nominalQuota: "256Gi"
+      - name: nvidia.com/gpu
+        nominalQuota: 16
+        borrowingLimit: 8
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: research
+  labels:
+    tenancy.lab/team: research
+spec:
+  cohortName: org
+  namespaceSelector:
+    matchLabels:
+      tenancy.lab/team: research
+  queueingStrategy: BestEffortFIFO
+  preemption:
+    reclaimWithinCohort: Any
+    withinClusterQueue: LowerPriority
+  resourceGroups:
+  - coveredResources:
+    - cpu
+    - memory
+    - nvidia.com/gpu
+    flavors:
+    - name: lab-gpu
+      resources:
+      - name: cpu
+        nominalQuota: "64"
+      - name: memory
+        nominalQuota: "256Gi"
+      - name: nvidia.com/gpu
+        nominalQuota: 8
+        borrowingLimit: 8
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: inference
+  labels:
+    tenancy.lab/team: inference
+spec:
+  cohortName: org
+  namespaceSelector:
+    matchLabels:
+      tenancy.lab/team: inference
+  queueingStrategy: BestEffortFIFO
+  preemption:
+    reclaimWithinCohort: Any
+    withinClusterQueue: LowerPriority
+  resourceGroups:
+  - coveredResources:
+    - cpu
+    - memory
+    - nvidia.com/gpu
+    flavors:
+    - name: lab-gpu
+      resources:
+      - name: cpu
+        nominalQuota: "64"
+      - name: memory
+        nominalQuota: "256Gi"
+      - name: nvidia.com/gpu
+        nominalQuota: 8
+        borrowingLimit: 0
+        lendingLimit: 0
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: LocalQueue
+metadata:
+  name: training
+  namespace: team-training
+  labels:
+    tenancy.lab/team: training
+spec:
+  clusterQueue: training
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: LocalQueue
+metadata:
+  name: research
+  namespace: team-research
+  labels:
+    tenancy.lab/team: research
+spec:
+  clusterQueue: research
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: LocalQueue
+metadata:
+  name: inference
+  namespace: team-inference
+  labels:
+    tenancy.lab/team: inference
+spec:
+  clusterQueue: inference
