@@ -75,9 +75,12 @@ def kueue(cqs: dict, workloads: dict, gpu: str = "nvidia.com/gpu") -> dict[str, 
             qr = cond(wl, "QuotaReserved")
             if qr and qr.get("message"):
                 t.pending_reason[owner] = qr["message"]
+        # how often it was preempted, and why: the eviction counter says how often; the reason
+        # (InCohortReclamation, InClusterQueue...) is on the Preempted condition
+        pre = cond(wl, "Preempted")
         for ev in wl.get("status", {}).get("schedulingStats", {}).get("evictions", []):
             if ev.get("reason") == "Preempted":
-                cause = ev.get("underlyingCause") or "Preempted"
+                cause = ev.get("underlyingCause") or (pre or {}).get("reason") or "Preempted"
                 t.preemptions[cause] = t.preemptions.get(cause, 0) + int(ev.get("count", 1))
     for t in teams.values():
         t.admitted.sort()
