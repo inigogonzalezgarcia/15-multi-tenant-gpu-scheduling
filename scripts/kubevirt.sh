@@ -15,6 +15,7 @@ kubectl -n kubevirt wait kv kubevirt --for condition=Available --timeout=15m
 kvm=$(kubectl get nodes -o jsonpath='{range .items[*]}{.status.allocatable.devices\.kubevirt\.io/kvm}{" "}{end}')
 if [[ "$kvm" =~ [1-9] ]]; then mode="KVM (the runner exposes /dev/kvm)"; else mode="software emulation (QEMU TCG)"; fi
 echo "  virtualization: $mode"
+if [[ -n "${REQUIRE_SOFTWARE_EMULATION:-}" && "$mode" == KVM* ]]; then fail "KVM is available; expected software emulation"; fi
 kubectl apply -f "$ROOT/manifests/namespaces.yaml" >/dev/null
 
 vm() { sed -e "s/NAME/$1/g" -e "s/VERSION/$KUBEVIRT_VERSION/" "$ROOT/kubevirt/vm.yaml" | kubectl apply -f - >/dev/null; }
