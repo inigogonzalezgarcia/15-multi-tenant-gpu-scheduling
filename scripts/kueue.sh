@@ -28,6 +28,7 @@ step "2. inference uses its own 8 GPUs: they were never lent"
 for i in 1 2; do submit kueue inference "inference-$i" --pods 1 --gpus 4 --priority batch; done
 wait_for 90 "2 inference jobs admitted without preempting anyone" is kueue 'len(d["inference"]["admitted"])' 2
 wait_for 60 "nobody preempted yet" is kueue 'sum(sum(t["preemptions"].values()) for t in d.values())' 0
+wait_for 60 "inference uses its 8 GPUs" is kueue 'd["inference"]["gpus_in_use"]' 8
 snapshot kueue "2. inference"
 
 step "3. training wants its 16 guaranteed GPUs back: Kueue reclaims what research borrowed"
