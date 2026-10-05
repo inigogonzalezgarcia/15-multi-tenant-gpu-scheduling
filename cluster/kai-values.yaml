@@ -1,0 +1,5 @@
+# KAI Scheduler with GPU sharing that does not enforce GPU memory (the GPUs are simulated).
+global:
+  gpuSharingMode: NonMemoryEnforced
+admission:
+  gpuFractionRuntimeClassName: ""

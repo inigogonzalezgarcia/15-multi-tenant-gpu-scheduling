@@ -1,0 +1,13 @@
+# fake-gpu-operator (run-ai/fake-gpu-operator): a device plugin that advertises nvidia.com/gpu on
+# labelled nodes, with no GPU behind it. Pods get the resource; nothing runs on a GPU.
+topology:
+  nodePoolLabelKey: run.ai/simulated-gpu-node-pool
+  migStrategy: none
+  nodePools:
+    default:
+      gpuProduct: NVIDIA-A100-SXM4-80GB
+      gpuCount: 8
+      gpuMemory: 81920
+environment:
+  # KAI's GPU sharing creates reservation pods here; the operator must know the namespace
+  resourceReservationNamespace: kai-resource-reservation

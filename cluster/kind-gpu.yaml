@@ -1,0 +1,13 @@
+# Four GPU workers; fake-gpu-operator gives each one 8 simulated GPUs (cluster/fake-gpu-values.yaml).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+  labels: {run.ai/simulated-gpu-node-pool: default}
+- role: worker
+  labels: {run.ai/simulated-gpu-node-pool: default}
+- role: worker
+  labels: {run.ai/simulated-gpu-node-pool: default}
+- role: worker
+  labels: {run.ai/simulated-gpu-node-pool: default}
