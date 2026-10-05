@@ -71,8 +71,10 @@ jobs:
           source cluster/versions.env
           curl -fsSLo /tmp/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64"
           sudo install -m 0755 /tmp/kind /usr/local/bin/kind
+      - name: Hide /dev/kvm, so the VM runs under software emulation (QEMU TCG)
+        run: sudo rm -f /dev/kvm
       - name: KubeVirt with software emulation
-        run: bash scripts/kubevirt.sh
+        run: REQUIRE_SOFTWARE_EMULATION=1 bash scripts/kubevirt.sh
       - name: Report
         if: always()
         run: cat out/kubevirt-report.md 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
