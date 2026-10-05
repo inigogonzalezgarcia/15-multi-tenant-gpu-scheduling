@@ -1,0 +1,43 @@
+# Who gets which GPUs, in one place. `python -m tenancy render` turns it into Kueue and
+# KAI Scheduler objects (manifests/), so both schedulers enforce the same agreement.
+
+[cluster]
+name = "lab"
+gpu_resource = "nvidia.com/gpu"
+gpu_nodes = 4
+gpus_per_node = 8                                 # fake-gpu-operator: 4 x 8 simulated GPUs
+node_pool_label = "run.ai/simulated-gpu-node-pool"
+node_pool = "default"
+flavor = "lab-gpu"                                # Kueue ResourceFlavor for those nodes
+
+[[priority]]                                      # Kueue WorkloadPriorityClasses
+name = "batch"
+value = 100
+description = "Default for training and research jobs"
+
+[[priority]]
+name = "urgent"
+value = 1000
+description = "A release blocker: may preempt batch jobs of the same team"
+
+[[team]]
+name = "training"
+description = "Large training runs"
+gpus = 16             # guaranteed GPUs
+can_borrow = 8        # extra GPUs it may use while other teams leave theirs idle
+weight = 2            # share of idle GPUs when several teams want them (KAI overQuotaWeight)
+
+[[team]]
+name = "research"
+description = "Experiments and hyper-parameter sweeps"
+gpus = 8
+can_borrow = 8
+weight = 1
+
+[[team]]
+name = "inference"
+description = "Model serving: its GPUs are never lent out"
+gpus = 8
+can_borrow = 0
+lends = 0             # GPUs it lends to the others while idle (absent = all of them)
+weight = 1
